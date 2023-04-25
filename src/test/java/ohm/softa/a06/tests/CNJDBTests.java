@@ -1,9 +1,18 @@
 package ohm.softa.a06.tests;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import ohm.softa.a06.CNJDBApi;
+import ohm.softa.a06.adapter.JokeAdapter;
+import ohm.softa.a06.adapter.JokeArrayAdapter;
 import ohm.softa.a06.model.Joke;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -27,13 +36,27 @@ class CNJDBTests {
 		boolean collision = false;
 
 		while (requests++ < REQUEST_COUNT) {
-			// TODO Prepare call object
+			// Prepare call object
+			Gson gson = new GsonBuilder()
+				.registerTypeAdapter(Joke.class, new JokeAdapter())
+				.registerTypeAdapter(Joke[].class, new JokeArrayAdapter())
+				.create();
 
-			// TODO Perform a synchronous request
+			Retrofit retrofit = new Retrofit.Builder()
+				.addConverterFactory(GsonConverterFactory.create(gson))
+				.baseUrl("https://api.chucknorris.io")
+				.build();
 
-			// TODO Extract object
+			CNJDBApi api = retrofit.create(CNJDBApi.class);
 
-			Joke j = null;
+			// Perform a synchronous request
+
+			Call<Joke> call = api.getRandomJoke();
+			Response<Joke> resp = call.execute();
+
+
+			// Extract object
+			Joke j = resp.body();
 
 			if (jokeNumbers.contains(j.getIdentifier())) {
 				logger.info(String.format("Collision at joke %s", j.getIdentifier()));
